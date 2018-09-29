@@ -1,7 +1,7 @@
 # AlpineLinux with a glibc-2.28-r0 and Oracle Java 8
-FROM alpine:3.7
+FROM alpine:3.8
 
-MAINTAINER Anastas Dancha <anapsix@random.io>
+MAINTAINER guomao <guomao@163.com>
 # thanks to Vladimir Krivosheev <develar@gmail.com> aka @develar for smaller image
 # and Victor Palma <palma.victor@gmail.com> aka @devx for pointing it out
 
@@ -15,10 +15,19 @@ ENV JAVA_VERSION_MAJOR=8 \
     PATH=${PATH}:/opt/jdk/bin \
     GLIBC_REPO=https://github.com/sgerrand/alpine-pkg-glibc \
     GLIBC_VERSION=2.28-r0 \
-    LANG=C.UTF-8
+    LANG=C.UTF-8 \
+    
 
 # do all in one step
-RUN set -ex && \
+RUN echo "https://mirror.tuna.tsinghua.edu.cn/alpine/v3.8/main/" > /etc/apk/repositories && \
+    apk update \
+    && apk upgrade \
+    && apk add --no-cache tree curl tzdata bash bash-doc bash-completion \
+    && rm -rf /var/cache/apk/* \
+	&& cp -r -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo 'Asia/Shanghai' >/etc/timezone \
+    && echo 'Asia/Shanghai' > /etc/TZ
+    set -ex && \
     [[ ${JAVA_VERSION_MAJOR} != 7 ]] || ( echo >&2 'Oracle no longer publishes JAVA7 packages' && exit 1 ) && \
     apk -U upgrade && \
     apk add libstdc++ curl ca-certificates bash && \
@@ -78,5 +87,7 @@ RUN set -ex && \
            /opt/jdk/jre/lib/plugin.jar \
            /tmp/* /var/cache/apk/* && \
     echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf
+    
+CMD ["/bin/bash"]
 
 # EOF
